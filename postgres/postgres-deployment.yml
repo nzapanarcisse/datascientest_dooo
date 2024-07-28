@@ -16,6 +16,8 @@ spec:
       labels:
         app: postgres
     spec:
+      nodeSelector:
+        app: db
       containers:
       - image: postgres:10
         name: postgres
