@@ -16,6 +16,8 @@ spec:
       labels:
         app: odoo
     spec:
+      nodeSelector:
+        app: front-end
       containers:
       - image: odoo
         name: odoo
