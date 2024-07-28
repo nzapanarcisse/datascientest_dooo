@@ -1,7 +1,7 @@
+
 kubectl apply -f .
 # install etcdctl https://github.com/etcd-io/etcd/releases
 kubectl -n kube-system get pod/etcd-k8s-master -o=jsonpath='{$.spec.containers[:1].image}'
-
 
 
 #debu install etcd
@@ -33,6 +33,7 @@ cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep etcd
 rm /tmp/backup.db
 
 
+
 ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
 --cacert=/etc/kubernetes/pki/etcd/ca.crt \
 --cert=/etc/kubernetes/pki/etcd/server.crt \
@@ -42,5 +43,21 @@ snapshot save /tmp/backup.db
 ETCDCTL_API=3 etcdctl --write-out=table snapshot status /tmp/backup.db
 
 kubectl delete -f pod-red.yml
-
+sss
 mv /etc/kubernetes/manifests/kube-apiserver.yaml ./
+mv /etc/kubernetes/manifests/etcd.yaml ./
+rm -rf /var/lib/etcd
+
+ETCDCTL_API=3 etcdctl --data-dir="/var/lib/etcd" snapshot restore /tmp/backup.db
+
+mv kube-apiserver.yaml /etc/kubernetes/manifests/
+mv etcd.yaml /etc/kubernetes/manifests/
+
+kubectl get po
+
+ctr -n k8s.io containers list
+
+journalctl -u kubelet
+
+kubectl delete -f .
+
