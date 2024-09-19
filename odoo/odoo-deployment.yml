@@ -17,7 +17,7 @@ spec:
         app: odoo
     spec:
       nodeSelector:
-        app: front-end
+        front: front-end
       containers:
       - image: odoo
         name: odoo
