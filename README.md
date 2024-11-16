@@ -1,20 +1,11 @@
-## Architecture et Fonctionnement d'un Cluster Kubernetes
+## LAB O (Architecture et Fonctionnement d'un Cluster Kubernetes)
+![image](https://github.com/user-attachments/assets/d6cabbf4-5fe5-4852-b66d-3e0e98252866)
 
-Dans un cluster Kubernetes, il existe deux types d'interactions :
+L'image ci-dessus illustre l'architecture d'un cluster Kubernetes. Dans cet environnement, il existe deux types d'interaction avec le cluster : soit vous êtes un développeur (qui déploie une application ou administre le cluster), soit vous êtes un utilisateur final (qui consomme une application déployée sur le cluster).
 
-1. **Développeurs et Administrateurs** : Ils sont responsables du déploiement des applications et de l'administration du cluster.
-2. **Utilisateurs** : Ils consomment les applications déployées sur le cluster.
+Il y a deux types de nœuds : les nœuds master et les nœuds worker. Les nœuds master abritent les composants nécessaires au fonctionnement de Kubernetes, tandis que les nœuds worker possèdent leurs propres composants et sont principalement chargés d’exécuter les instructions données par le nœud master.
 
-### Types de Nœuds
-
-Un cluster Kubernetes se compose de deux types de nœuds :
-
-- **Nœuds Master** : Ils hébergent les composants essentiels au fonctionnement de Kubernetes.
-- **Nœuds Worker** : Ils contiennent leurs propres composants et exécutent les instructions du nœud master.
-
-### Composants du Nœud Master
-
-Le nœud master, également appelé nœud manager, est constitué de quatre composants principaux :
+Concentrons-nous sur le nœud master. Ce dernier, également appelé nœud gestionnaire, se compose généralement de quatre composants principaux :
 
 1. **API Server (Kube API)**
    - **Description** : Point d'entrée principal pour toutes les requêtes au cluster Kubernetes. Il expose l'API Kubernetes et gère les opérations CRUD (Create, Read, Update, Delete) sur les ressources.
