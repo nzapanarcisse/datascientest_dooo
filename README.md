@@ -110,9 +110,8 @@ kubectl apply -f .
 
 Tout se passe comme si vous aviez mis un load balancer devant votre microservice, qui répartit la charge sur les différentes instances de celui-ci.
 # Lab 3 (déploiement d'une application avec base de donnée sur kubernetes)
-![image](https://github.com/user-attachments/assets/b5b366d4-404a-4dbb-94f9-e030e4fb8e00)
+![image](https://github.com/user-attachments/assets/0a6bb3d2-b94d-4d23-a204-9bf4eebe2247)
 
-# Lab 3 (Déploiement d'une application avec base de données sur Kubernetes)
 
 Dans ce lab, nous allons déployer l'application Odoo dans un cluster Kubernetes. Odoo est un progiciel de gestion intégrée de type application à deux tiers. 
 
@@ -145,4 +144,9 @@ kubectl label nodes vmi822295 app-
 ```
 
 Ainsi, en utilisant ce code dans notre microservice, il ne pourra se déployer que sur le nœud étiqueté `app=db`.
+**voir le les manifest(dossier odoo et postgres)**
+![image](https://github.com/user-attachments/assets/f6f87240-54c2-410b-a3c7-5a1c74a55d95)
+
+![image](https://github.com/user-attachments/assets/45c13ef5-39c6-4bda-93c9-33335e1280cd)
+
 
