@@ -109,6 +109,8 @@ kubectl apply -f .
 ![image](https://github.com/user-attachments/assets/898e94ec-c7d1-46be-a66e-6af22fd719c0)
 
 Tout se passe comme si vous aviez mis un load balancer devant votre microservice, qui répartit la charge sur les différentes instances de celui-ci.
+Bravo ! 🎉
+
 # Lab 3 (déploiement d'une application avec base de donnée sur kubernetes)
 ![image](https://github.com/user-attachments/assets/0a6bb3d2-b94d-4d23-a204-9bf4eebe2247)
 
@@ -166,7 +168,9 @@ kubectl apply -f .
 kubectl get all -n ic-webapp
 ```
 ![image](https://github.com/user-attachments/assets/5321cd2d-e867-4fba-882f-1abc36dfc481)
-
+Bravo ! 🎉
+Bravo ! 🎉
+Bravo ! 🎉
 # Lab 4 : Backup du Cluster
 
 Nous venons d'installer nos microservices sur le cluster. Supposons qu'un incident survienne et que nous souhaitions revenir en arrière. Bien que nos manifests soient sauvegardés sur un dépôt distant, il peut être nécessaire de restaurer l'état précédent du cluster. Il est donc essentiel de réaliser des sauvegardes, notamment de l'etcd (la base de données du cluster). Pour ce faire, nous allons utiliser la ligne de commande `etcdctl`. 
@@ -264,7 +268,8 @@ mv etcd.yaml /etc/kubernetes/manifests/
 
 vérifions la disponibilité de notre application
 ![image](https://github.com/user-attachments/assets/12ff1bd3-d946-42e6-a8b6-a32b9f643257)
-
+Bravo ! 🎉
+Bravo ! 🎉
 
 ***NB: En production, vous auriez besoin d'un outil plus complet comme Velero pour effectuer les sauvegardes de vos applications, d'un microservice en particulier ou d'un volume persistant spécifiquement. Vous pouvez également sauvegarder toutes les applications d'un namespace.**
 ![image](https://github.com/user-attachments/assets/7a5459cb-716e-4c10-a57a-b09b4e2899cc)
