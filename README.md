@@ -41,7 +41,7 @@ Concentrons-nous sur le nœud master. Ce dernier, également appelé nœud gesti
 - Pendant que le pod fonctionne, le Kube Controller Manager surveille l'état des ressources. Si un pod échoue, il prend des mesures pour le redémarrer ou le remplacer.
 
 
-# Labs 1 (Exploration d'un cluster kubernetes)
+# Lab 1 (Exploration d'un cluster kubernetes)
 
 Sans plus tarder, explorons les composants du cluster en commençant par le nœud principal.
 
@@ -85,9 +85,24 @@ systemctl status kubelet
 ```bash
 cat /etc/kubernetes/kubelet.conf
 ```
+# Lab 2 (Problème de scalabilité ou de remonté en charge sur une application)
 Ce fichier permet à kubelet de communiquer avec Kubernetes, notamment avec l'API server, et contient l'URL de connexion au cluster.
 Pour voir la configuration de kubelet, consultez :
 ```bash
 cat /var/lib/kubelet/config.yaml
 ```
 ![image](https://github.com/user-attachments/assets/0741f086-96ff-4510-8749-9f046188a5ff)
+
+# Lab 2 (Problème de scalabilité ou de montée en charge sur une application ou un microservice)
+
+Supposons que nous avons une application ou un microservice en production qui rencontre des problèmes de montée en charge (le microservice est très sollicité, notamment lors de jours de forte affluence, par exemple). Cela peut aussi être dû au fait que le nombre d'utilisateurs sollicitant le microservice a doublé, voire triplé, et que l'application ne répond plus ou met trop de temps à le faire.
+
+Pour résoudre ce genre de souci avec Kubernetes, vous pouvez simplement augmenter le nombre de réplicas de votre application, et Kubernetes va équilibrer le trafic sur les différentes instances de votre application.
+
+Appliquez les manifests du dossier `tp-1` et connectez-vous à l'application.
+![image](https://github.com/user-attachments/assets/f3d154d6-e2ee-40a7-b31e-d0ac674091a9)
+![image](https://github.com/user-attachments/assets/d975fb2b-14bc-4225-8a62-be5680ddb13f)
+![image](https://github.com/user-attachments/assets/898e94ec-c7d1-46be-a66e-6af22fd719c0)
+
+
+Tout se passe comme si vous aviez mis un load balancer devant votre microservice, qui répartit la charge sur les différentes instances de celui-ci.
