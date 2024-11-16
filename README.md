@@ -118,6 +118,8 @@ Dans ce lab, nous allons déployer l'application Odoo dans un cluster Kubernetes
 Pour la base de données, nous utiliserons un service de type ClusterIP, car la base de données est consommée par l'application frontale, et nous n'avons pas besoin d'y accéder depuis l'extérieur. Pour l'application Odoo elle-même (partie frontale), nous l'exposerons via un service de type NodePort, car nous souhaitons pouvoir consommer l'application depuis l'extérieur du cluster.
 
 Pour des raisons spécifiques liées aux ressources CPU et mémoire, nous souhaitons que le microservice de la base de données ne soit déployé que sur le nœud `node01`, car ce nœud dispose des ressources nécessaires, ce que `node02` n'a pas. Pour résoudre ce genre de contrainte sur Kubernetes, vous pouvez utiliser la notion de taint ou le NodeSelector.
+
+
 ***taint***
 ![image](https://github.com/user-attachments/assets/0442570e-0863-451f-b771-4f6e7462fc71)
 Vous pouvez donc taint vos nœuds et ajouter des tolerations à vos pods, afin qu'ils ne se déploient que sur des nœuds respectant cette taint. Dans le schéma ci-dessus, le pod (microservice) avec une taint rouge ne pourra se déployer que sur des nœuds avec une taint rouge. Il en va de même pour les pods avec une taint rose et une taint orange.
