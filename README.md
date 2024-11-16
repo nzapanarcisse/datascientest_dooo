@@ -39,3 +39,55 @@ Concentrons-nous sur le nœud master. Ce dernier, également appelé nœud gesti
 
 **Contrôle de l'État** :
 - Pendant que le pod fonctionne, le Kube Controller Manager surveille l'état des ressources. Si un pod échoue, il prend des mesures pour le redémarrer ou le remplacer.
+
+
+# Labs 1 (Exploration d'un cluster kubernetes)
+
+Sans plus tarder, explorons les composants du cluster en commençant par le nœud principal.
+
+## Commandes à exécuter
+
+- `kubectl get nodes`
+- `kubectl get pods -n kube-system`
+- `kubectl get pods -A`
+- `kubectl get rs -n kube-system`
+
+```bash
+systemctl status kubelet
+```
+```bash
+kubectl delete pod etcd-vmi822295 -n kube-system
+```
+***Supprimons par exemple etcd (base de données du cluster). Nous allons nous rendre compte qu'un nouveau pod se crée. Cela est dû au fait que les quatre composants du nœud master que nous venons de voir sont des pods statiques.***
+
+## Exploration des Pods statiques
+Pour examiner les pods statiques, accédez au répertoire suivant :
+```bash
+cd /etc/kubernetes/manifests
+ls
+```
+
+**Ensuite, consultez les fichiers de configuration des composants :**
+
+```bash
+cat kube-apiserver.yaml   # Vous pourrez voir les IP de vos services
+cat kube-controller-manager.yaml
+cat etcd.yaml
+```
+***Revenons à kubelet pour vérifier son état :***
+
+```bash
+systemctl status kubelet
+```
+
+***Pour voir la configuration de kubelet, exécutez :***
+
+```bash
+cat /etc/kubernetes/kubelet.conf
+```
+Ce fichier permet à kubelet de communiquer avec Kubernetes, notamment avec l'API server, et contient l'URL de connexion au cluster.
+Pour voir la configuration de kubelet, consultez :
+```bash
+cat /var/lib/kubelet/config.yaml
+```
+![image](https://github.com/user-attachments/assets/0741f086-96ff-4510-8749-9f046188a5ff)
