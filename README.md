@@ -145,8 +145,24 @@ kubectl label nodes vmi822295 app-
 
 Ainsi, en utilisant ce code dans notre microservice, il ne pourra se déployer que sur le nœud étiqueté `app=db`.
 **voir le les manifest(dossier odoo et postgres)**
+
 ![image](https://github.com/user-attachments/assets/f6f87240-54c2-410b-a3c7-5a1c74a55d95)
 
 ![image](https://github.com/user-attachments/assets/45c13ef5-39c6-4bda-93c9-33335e1280cd)
+
+***déploiement**
+```bash
+cd postgres
+kubectl apply -f .
+kubectl get all -n ic-webapp
+```
+![image](https://github.com/user-attachments/assets/2acea960-6fba-4045-ba80-3f56a90158d1)
+
+```bash
+cd ../odoo
+kubectl apply -f .
+kubectl get all -n ic-webapp
+```
+![image](https://github.com/user-attachments/assets/5321cd2d-e867-4fba-882f-1abc36dfc481)
 
 
