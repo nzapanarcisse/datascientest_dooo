@@ -109,3 +109,40 @@ kubectl apply -f .
 ![image](https://github.com/user-attachments/assets/898e94ec-c7d1-46be-a66e-6af22fd719c0)
 
 Tout se passe comme si vous aviez mis un load balancer devant votre microservice, qui répartit la charge sur les différentes instances de celui-ci.
+# Lab 3 (déploiement d'une application avec base de donnée sur kubernetes)
+![image](https://github.com/user-attachments/assets/b5b366d4-404a-4dbb-94f9-e030e4fb8e00)
+
+# Lab 3 (Déploiement d'une application avec base de données sur Kubernetes)
+
+Dans ce lab, nous allons déployer l'application Odoo dans un cluster Kubernetes. Odoo est un progiciel de gestion intégrée de type application à deux tiers. 
+
+Pour la base de données, nous utiliserons un service de type ClusterIP, car la base de données est consommée par l'application frontale, et nous n'avons pas besoin d'y accéder depuis l'extérieur. Pour l'application Odoo elle-même (partie frontale), nous l'exposerons via un service de type NodePort, car nous souhaitons pouvoir consommer l'application depuis l'extérieur du cluster.
+
+Pour des raisons spécifiques liées aux ressources CPU et mémoire, nous souhaitons que le microservice de la base de données ne soit déployé que sur le nœud `node01`, car ce nœud dispose des ressources nécessaires, ce que `node02` n'a pas. Pour résoudre ce genre de contrainte sur Kubernetes, vous pouvez utiliser la notion de taint ou le NodeSelector.
+***taint***
+![image](https://github.com/user-attachments/assets/0442570e-0863-451f-b771-4f6e7462fc71)
+Vous pouvez donc taint vos nœuds et ajouter des tolerations à vos pods, afin qu'ils ne se déploient que sur des nœuds respectant cette taint. Dans le schéma ci-dessus, le pod (microservice) avec une taint rouge ne pourra se déployer que sur des nœuds avec une taint rouge. Il en va de même pour les pods avec une taint rose et une taint orange.
+
+***affinity***
+![image](https://github.com/user-attachments/assets/53fa40e7-a16c-45f2-af1c-a711884be878)
+
+Vous pouvez ajouter un `nodeSelector` dans le manifest de votre microservice, indiquant sur quel nœud il doit se déployer. Cela doit être fait après avoir étiqueté vos nœuds Kubernetes. 
+
+C'est ce que nous allons faire :
+
+nous allons ajouter un label `app=db` au nœud `node01` et un autre label `front=front-end` au nœud `node02`.
+```bash
+kubectl label nodes vmi822295 app=db
+kubectl label nodes vmi822295 front=front-end
+```
+pour voir les label sur un noeud
+```bash
+kubectl get node vmi822295 --show-labels
+```
+pour supprimer le label **app** sur le node **vmi822295**
+```bash
+kubectl label nodes vmi822295 app-
+```
+
+Ainsi, en utilisant ce code dans notre microservice, il ne pourra se déployer que sur le nœud étiqueté `app=db`.
+
