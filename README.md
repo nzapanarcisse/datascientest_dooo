@@ -100,9 +100,12 @@ Supposons que nous avons une application ou un microservice en production qui re
 Pour résoudre ce genre de souci avec Kubernetes, vous pouvez simplement augmenter le nombre de réplicas de votre application, et Kubernetes va équilibrer le trafic sur les différentes instances de votre application.
 
 Appliquez les manifests du dossier `tp-1` et connectez-vous à l'application.
+```bash
+cd tp-1
+kubectl apply -f .
+```
 ![image](https://github.com/user-attachments/assets/f3d154d6-e2ee-40a7-b31e-d0ac674091a9)
 ![image](https://github.com/user-attachments/assets/d975fb2b-14bc-4225-8a62-be5680ddb13f)
 ![image](https://github.com/user-attachments/assets/898e94ec-c7d1-46be-a66e-6af22fd719c0)
-
 
 Tout se passe comme si vous aviez mis un load balancer devant votre microservice, qui répartit la charge sur les différentes instances de celui-ci.
