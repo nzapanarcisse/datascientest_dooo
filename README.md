@@ -273,3 +273,26 @@ Bravo ! 🎉
 
 ***NB: En production, vous auriez besoin d'un outil plus complet comme Velero pour effectuer les sauvegardes de vos applications, d'un microservice en particulier ou d'un volume persistant spécifiquement. Vous pouvez également sauvegarder toutes les applications d'un namespace.**
 ![image](https://github.com/user-attachments/assets/7a5459cb-716e-4c10-a57a-b09b4e2899cc)
+
+# Lab 5 : Mise à jour du Cluster
+
+![image](https://github.com/user-attachments/assets/e289f75b-3df7-4679-9e6a-484904a79a42)
+
+***MASTER**
+```bash
+yum install -y kubeadm-1.26.4-0 --disableexcludes=kubernetes
+kubeadm upgrade apply v1.26.4
+kubectl drain master --ignore-daemonsets
+sudo systemctl daemon-reload && sudo systemctl restart kubelet
+kubectl uncordon master
+```
+***WORKER**
+```bash
+yum install -y kubeadm-1.26.4-0 --disableexcludes=kubernetes
+kubeadm upgrade node
+kubectl drain worker1 --ignore-daemonsets (on master)
+yum install -y kubelet-1.26.4-0 kubectl-1.26.4-0 --disableexcludes=kubernetes
+sudo systemctl daemon-reload && sudo systemctl restart kubelet
+kubectl uncordon worker1
+kubectl get nodes
+```
