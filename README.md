@@ -167,4 +167,104 @@ kubectl get all -n ic-webapp
 ```
 ![image](https://github.com/user-attachments/assets/5321cd2d-e867-4fba-882f-1abc36dfc481)
 
+# Lab 4 : Backup du Cluster
 
+Nous venons d'installer nos microservices sur le cluster. Supposons qu'un incident survienne et que nous souhaitions revenir en arrière. Bien que nos manifests soient sauvegardés sur un dépôt distant, il peut être nécessaire de restaurer l'état précédent du cluster. Il est donc essentiel de réaliser des sauvegardes, notamment de l'etcd (la base de données du cluster). Pour ce faire, nous allons utiliser la ligne de commande `etcdctl`. 
+
+## Étapes d'installation
+
+1. **Récupération de la version de votre etcd :**
+
+   Exécutez la commande suivante pour obtenir la version d'etcd installée sur votre cluster :
+
+```bash
+   kubectl -n kube-system get pod/etcd-vmi822295 -o=jsonpath='{$.spec.containers[:1].image}'
+```
+   Cette commande vous donnera la version d'etcd installée sur votre cluster. Dans notre cas, nous avons etcd:3.5.4, comme le montre le schéma ci-dessous : ![image](https://github.com/user-attachments/assets/c569c7d6-d6c8-4af2-bf34-012eb62f04dd)
+.
+
+2. **Installation d'etcdctl : Voici les commandes à exécuter**
+
+```bash
+# Début de l'installation d'etcd
+ETCD_VER=v3.5.4
+
+# Choisissez l'URL
+GOOGLE_URL=https://storage.googleapis.com/etcd
+GITHUB_URL=https://github.com/etcd-io/etcd/releases/download
+DOWNLOAD_URL=${GOOGLE_URL}
+
+rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+rm -rf /tmp/etcd-download-test && mkdir -p /tmp/etcd-download-test
+
+curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download-test --strip-components=1
+rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+
+/tmp/etcd-download-test/etcd --version
+/tmp/etcd-download-test/etcdctl version
+
+ln -s /tmp/etcd-download-test/etcdctl /usr/bin/etcdctl
+etcdctl version
+# Fin de l'installation d'etcd
+```
+![image](https://github.com/user-attachments/assets/a9696941-0e19-4efa-8794-29df17699b8a)
+
+# Backup du Cluster
+
+Pour voir la configuration et comprendre comment `kube-apiserver` communique avec les autres composants, vous pouvez exécuter la commande suivante :
+
+```bash
+cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep etcd
+```
+
+```bash
+rm /tmp/backup.db
+
+ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
+--key=/etc/kubernetes/pki/etcd/server.key \
+snapshot save /tmp/backup.db
+```
+**vous pouvez voir la taile de votre base de données kubernetes**
+
+```bash
+ETCDCTL_API=3 etcdctl --write-out=table snapshot status /tmp/backup.db
+```
+![image](https://github.com/user-attachments/assets/ff1ae35f-824e-4c26-b4ff-d69626b03505)
+
+
+Nous allons maintenant simuler une incident sur le cluster et effectuer une restauration. Pour ce faire, rendez-vous dans le dossier d'Odoo, puis supprimez les pods avec la commande suivante :
+
+```bash
+kubectl delete -f .
+```
+![image](https://github.com/user-attachments/assets/72111042-5c96-43a0-a82a-4e0b4f8576b1)
+
+Pour commencer la restauration, nous allons d'abord supprimer les pods statiques afin d'éviter d'écrire dans la base de données pendant cette phase de restauration. Pour ce faire, exécutez les commandes suivantes :
+
+```bash
+mv /etc/kubernetes/manifests/kube-apiserver.yaml ./
+mv /etc/kubernetes/manifests/etcd.yaml ./
+rm -rf /var/lib/etcd
+```
+
+Nous pouvons donc restaurer notre cluster en utilisant la commande suivante :
+
+```bash
+ETCDCTL_API=3 etcdctl --data-dir="/var/lib/etcd" snapshot restore /tmp/backup.db
+```
+une fois la restoration nous pouvons remetre les fichiers static
+```bash
+mv kube-apiserver.yaml /etc/kubernetes/manifests/
+mv etcd.yaml /etc/kubernetes/manifests/
+```
+![image](https://github.com/user-attachments/assets/d669038b-1675-4e0e-bd39-62803a2b9073)
+
+vérifions la disponibilité de notre application
+![image](https://github.com/user-attachments/assets/12ff1bd3-d946-42e6-a8b6-a32b9f643257)
+
+
+***NB: En production, vous auriez besoin d'un outil plus complet comme Velero pour effectuer les sauvegardes de vos applications, d'un microservice en particulier ou d'un volume persistant spécifiquement. Vous pouvez également sauvegarder toutes les applications d'un namespace.**
+![image](https://github.com/user-attachments/assets/7a5459cb-716e-4c10-a57a-b09b4e2899cc)
