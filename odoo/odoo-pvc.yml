@@ -7,7 +7,6 @@ metadata:
     env: prod
   namespace: ic-webapp
 spec:
-  storageClassName: manual
   accessModes:
     - ReadWriteMany
   resources:

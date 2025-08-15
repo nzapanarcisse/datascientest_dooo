@@ -5,9 +5,7 @@ metadata:
   labels:
     type: local
     env: prod
-  namespace: ic-webapp
 spec:
-  storageClassName: manual
   capacity:
     storage: 20Gi
   accessModes:
