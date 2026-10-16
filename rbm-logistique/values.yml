@@ -38,6 +38,15 @@ odooPassword: "RbmLogistique2026!"
 ## Pas de donnees de demo en production
 loadDemoData: false
 ## ----------------------------------------------------------------------------
+## Correctif bug Bitnami : "ModuleNotFoundError: No module named 'odoo'"
+## Lors d'une install de module via l'UI, Odoo se re-execute (server reload)
+## et perd le PYTHONPATH -> le paquet "odoo" n'est plus trouvable -> crash.
+## On force PYTHONPATH vers la racine du code Odoo pour que le reload marche.
+## ----------------------------------------------------------------------------
+extraEnvVars:
+  - name: PYTHONPATH
+    value: /opt/bitnami/odoo/lib
+## ----------------------------------------------------------------------------
 ## Deploiement Odoo
 ## ----------------------------------------------------------------------------
 replicaCount: 1
@@ -62,7 +71,7 @@ startupProbe:
   initialDelaySeconds: 120
   periodSeconds: 15
   timeoutSeconds: 5
-  failureThreshold: 40
+  failureThreshold: 80
 livenessProbe:
   enabled: true
   initialDelaySeconds: 600

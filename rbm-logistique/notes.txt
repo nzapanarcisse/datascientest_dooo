@@ -97,3 +97,49 @@ kubectl get svc rbm-logistique -n rbm-logistique -o jsonpath='{.spec.ports[0].no
 # Pour tout nettoyer (donnees comprises) :
 #   kubectl delete pvc --all -n rbm-logistique
 #   kubectl delete namespace rbm-logistique
+
+## -----------------------------------------------------------------------------
+## 9. DEPANNAGE - "No module named 'odoo'" apres install d'un module via l'UI
+## -----------------------------------------------------------------------------
+# Symptome : apres avoir installe un module (ex: sale) depuis l'interface web,
+#   Odoo crashe (exit 1) et devient inaccessible. Logs :
+#     Initiating server reload
+#     Traceback ... File "/opt/bitnami/odoo/bin/odoo", line 5, in <module>
+#       import odoo
+#     ModuleNotFoundError: No module named 'odoo'
+#
+# Cause : bug de l'image Bitnami. L'install via l'UI declenche un "server reload"
+#   (os.execv) qui perd le PYTHONPATH -> le paquet odoo n'est plus importable.
+#
+# Correctif durable (deja applique dans values.yml) :
+#   extraEnvVars:
+#     - name: PYTHONPATH
+#       value: /opt/bitnami/odoo/lib
+#   + startupProbe.failureThreshold: 80 (installs de modules longues)
+#   Appliquer : helm upgrade rbm-logis bitnami/odoo --version 28.2.10 \
+#                 -n rbm-logistique -f values.yml
+#
+# Bonne pratique : sur image Bitnami, installer les modules en CLI (ci-dessous)
+#   plutot que via l'UI, OU redemarrer le pod apres une install UI.
+#
+# --- Procedure de recuperation (si la base est restee bloquee) ---
+# 1) Laisser le pod demarrer sans se faire tuer par les sondes :
+#    helm upgrade rbm-logis bitnami/odoo --version 28.2.10 -n rbm-logistique \
+#      -f values.yml \
+#      --set startupProbe.enabled=false \
+#      --set livenessProbe.enabled=false \
+#      --set readinessProbe.enabled=false
+#
+# 2) Terminer proprement l'install du module en CLI, dans le pod :
+#    kubectl exec -it deploy/rbm-logistique -n rbm-logistique -- bash
+#    odoo -c /opt/bitnami/odoo/conf/odoo.conf -d bitnami_odoo -i sale --stop-after-init
+#    # (ou --uninstall sale --stop-after-init pour annuler le module fautif)
+#    exit
+#
+# 3) Redemarrer et verifier :
+#    kubectl rollout restart deploy/rbm-logistique -n rbm-logistique
+#    kubectl logs -n rbm-logistique -l app.kubernetes.io/name=odoo -f
+#    # attendre : "HTTP service (werkzeug) running on ...:8069"
+#
+# 4) Reactiver les sondes (le correctif PYTHONPATH reste actif) :
+#    helm upgrade rbm-logis bitnami/odoo --version 28.2.10 -n rbm-logistique -f values.yml
