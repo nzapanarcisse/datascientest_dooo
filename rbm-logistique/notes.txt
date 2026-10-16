@@ -44,6 +44,17 @@ helm install rbm-logis bitnami/odoo \
 # - global.security.allowInsecureImages: true -> compatibilite catalogue Bitnami
 # - networkPolicy desactivee -> garantit l'acces via NodePort (a reactiver avec Ingress)
 # - startupProbe tolerante   -> le 1er demarrage d'Odoo (init BD) est long
+#
+# >>> IMPORTANT - IMAGES BITNAMI (migration sept. 2025) <<<
+# Les images "docker.io/bitnami/odoo" et "docker.io/bitnami/postgresql" ont ete
+# retirees du Docker Hub (erreur ImagePullBackOff / "not found").
+# On pointe donc vers le depot de maintien "bitnamilegacy" (memes tags) :
+#   image.repository            : bitnamilegacy/odoo
+#   postgresql.image.repository : bitnamilegacy/postgresql
+# Verification de disponibilite d'un tag (exemple) :
+#   docker manifest inspect docker.io/bitnamilegacy/postgresql:17.5.0-debian-12-r20
+# NB: ces images ne recevront plus de mises a jour de securite. A terme,
+#     migrer vers "Bitnami Secure Images" (bitnamisecure) ou une autre base.
 ## -----------------------------------------------------------------------------
 ## 5. IDENTIFIANTS
 ## -----------------------------------------------------------------------------

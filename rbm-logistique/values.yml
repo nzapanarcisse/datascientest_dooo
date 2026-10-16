@@ -22,6 +22,15 @@ global:
   security:
     allowInsecureImages: true
 ## ----------------------------------------------------------------------------
+## Image Odoo
+## Les images "docker.io/bitnami/*" ont ete retirees (catalogue Bitnami migre).
+## On pointe vers le depot de maintien "bitnamilegacy" (memes tags).
+## ----------------------------------------------------------------------------
+image:
+  registry: docker.io
+  repository: bitnamilegacy/odoo
+  tag: 18.0.20250805-debian-12-r8
+## ----------------------------------------------------------------------------
 ## Identifiants de l'administrateur Odoo
 ## ----------------------------------------------------------------------------
 odooEmail: admin@rbm-logistique.com
@@ -68,7 +77,7 @@ service:
   ports:
     http: 80
   nodePorts:
-    http: "30069"   # accessible sur http://<IP_NODE>:30069
+    http: "30070"   # accessible sur http://<IP_NODE>:30069
 ingress:
   enabled: false
 ## ----------------------------------------------------------------------------
@@ -92,6 +101,11 @@ volumePermissions:
 ## ----------------------------------------------------------------------------
 postgresql:
   enabled: true
+  ## Image depuis "bitnamilegacy" (docker.io/bitnami/postgresql retiree)
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/postgresql
+    tag: 17.5.0-debian-12-r20
   auth:
     username: bn_odoo
     password: "RbmPgOdoo2026!"
