@@ -1,0 +1,88 @@
+# =============================================================================
+#  NOTES - Deploiement Odoo RBM-LOGISTIQUE sur Kubernetes
+#  Chart : bitnami/odoo  --version 28.2.10
+# =============================================================================
+## -----------------------------------------------------------------------------
+## 1. PRE-REQUIS
+## -----------------------------------------------------------------------------
+# StorageClass utilise : "local-path" (rancher.io/local-path)
+#   -> defini dans ../postgres/local-path-provisioner.yaml
+#   -> volumeBindingMode: WaitForFirstConsumer / reclaimPolicy: Delete
+#
+# Verifier que le provisioner et le StorageClass sont bien installes :
+kubectl apply -f ../postgres/local-path-provisioner.yaml
+kubectl get storageclass
+# (on doit voir "local-path")
+## -----------------------------------------------------------------------------
+## 2. AJOUT DU DEPOT HELM BITNAMI
+## -----------------------------------------------------------------------------
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+## -----------------------------------------------------------------------------
+## 3. INSTALLATION / DEPLOIEMENT
+## -----------------------------------------------------------------------------
+# Creation du namespace dedie
+kubectl create namespace rbm-logistique
+# Installation avec le fichier de surcharge values.yml
+helm install rbm-logis bitnami/odoo \
+  --version 28.2.10 \
+  --namespace rbm-logistique \
+  -f values.yml
+# Mise a jour ulterieure du release :
+#   helm upgrade rbm-logis bitnami/odoo --version 28.2.10 -n rbm-logistique -f values.yml
+## -----------------------------------------------------------------------------
+## 4. CHOIX IMPORTANTS DU values.yml (overrides)
+## -----------------------------------------------------------------------------
+# - fullnameOverride: rbm-logistique      -> noms de ressources previsibles
+# - service.type: NodePort (port 30069)   -> acces temporaire (Ingress plus tard)
+# - persistence Odoo       : local-path, 10Gi, RWO, resourcePolicy=keep
+# - persistence PostgreSQL : local-path, 8Gi,  RWO, resourcePolicy=keep
+#     -> resourcePolicy=keep : les PVC survivent a un "helm uninstall"
+#        (important pour la securite des donnees avant/apres backup Velero)
+# - updateStrategy: Recreate -> obligatoire car volume RWO (local-path) non
+#        montable sur 2 pods simultanement
+# - global.security.allowInsecureImages: true -> compatibilite catalogue Bitnami
+# - networkPolicy desactivee -> garantit l'acces via NodePort (a reactiver avec Ingress)
+# - startupProbe tolerante   -> le 1er demarrage d'Odoo (init BD) est long
+## -----------------------------------------------------------------------------
+## 5. IDENTIFIANTS
+## -----------------------------------------------------------------------------
+# Interface Odoo :
+#   email    : admin@rbm-logistique.com
+#   password : RbmLogistique2026!
+# PostgreSQL :
+#   user bn_odoo / RbmPgOdoo2026!   (base bitnami_odoo)
+#   admin postgres / RbmPgAdmin2026!
+# NB: en production, externaliser ces secrets (existingSecret / SealedSecrets / Vault).
+## -----------------------------------------------------------------------------
+## 6. VERIFICATION DU DEPLOIEMENT
+## -----------------------------------------------------------------------------
+kubectl get pods -n rbm-logistique -w
+kubectl get svc,pvc,pv -n rbm-logistique
+kubectl get events -n rbm-logistique --sort-by=.lastTimestamp
+# Logs Odoo (suivre l'initialisation de la base) :
+kubectl logs -n rbm-logistique -l app.kubernetes.io/name=odoo -f
+# Recuperer le port NodePort reel :
+kubectl get svc rbm-logistique -n rbm-logistique -o jsonpath='{.spec.ports[0].nodePort}{"\n"}'
+# Acces : http://<IP_D_UN_NOEUD>:30069
+## -----------------------------------------------------------------------------
+## 7. BACKUP ULTERIEUR AVEC VELERO (rappel)
+## -----------------------------------------------------------------------------
+# Les PVC utilisent local-path (volumes "hostPath") -> activer File System Backup
+# (anciennement Restic/Kopia) pour sauvegarder le contenu des volumes.
+#
+# Exemple de sauvegarde du namespace complet avec les volumes :
+#   velero backup create rbm-logis-backup \
+#     --include-namespaces rbm-logistique \
+#     --default-volumes-to-fs-backup
+#
+# Restauration :
+#   velero restore create --from-backup rbm-logis-backup
+## -----------------------------------------------------------------------------
+## 8. DESINSTALLATION
+## -----------------------------------------------------------------------------
+# helm uninstall rbm-logis -n rbm-logistique
+# ATTENTION : resourcePolicy=keep => les PVC NE sont PAS supprimes.
+# Pour tout nettoyer (donnees comprises) :
+#   kubectl delete pvc --all -n rbm-logistique
+#   kubectl delete namespace rbm-logistique

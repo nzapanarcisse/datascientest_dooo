@@ -1,0 +1,130 @@
+# =============================================================================
+#  Odoo - RBM-LOGISTIQUE
+#  Chart : bitnami/odoo (version 28.2.10)
+#  Fichier de surcharge (overrides uniquement) - cluster on-premise
+#
+#  Objectifs :
+#   - Deploiement 100% fonctionnel (Odoo + PostgreSQL)
+#   - Exposition via un service NodePort (Ingress plus tard)
+#   - Persistance des donnees (Odoo + PostgreSQL) sur le StorageClass "local-path"
+#     -> ces PVC/PV seront sauvegardes ulterieurement avec Velero
+# =============================================================================
+## ----------------------------------------------------------------------------
+## Nommage
+## ----------------------------------------------------------------------------
+fullnameOverride: "rbm-logistique"
+## ----------------------------------------------------------------------------
+## Compatibilite images Bitnami
+## Necessaire depuis la migration du catalogue Bitnami (aout 2025) pour
+## autoriser l'utilisation des images sans verification stricte.
+## ----------------------------------------------------------------------------
+global:
+  security:
+    allowInsecureImages: true
+## ----------------------------------------------------------------------------
+## Identifiants de l'administrateur Odoo
+## ----------------------------------------------------------------------------
+odooEmail: admin@rbm-logistique.com
+odooPassword: "RbmLogistique2026!"
+## Pas de donnees de demo en production
+loadDemoData: false
+## ----------------------------------------------------------------------------
+## Deploiement Odoo
+## ----------------------------------------------------------------------------
+replicaCount: 1
+## PV monte sur un seul pod (RWO) -> strategie Recreate obligatoire
+## pour eviter le blocage du rolling update avec un volume local-path.
+updateStrategy:
+  type: Recreate
+  rollingUpdate: null
+## Ressources dimensionnees pour un demarrage fiable d'Odoo
+resourcesPreset: "none"
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "2"
+    memory: 4Gi
+## Le 1er demarrage d'Odoo (initialisation de la base) est long :
+## on laisse de la marge aux sondes pour eviter les redemarrages intempestifs.
+startupProbe:
+  enabled: true
+  initialDelaySeconds: 120
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 40
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 600
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 60
+## ----------------------------------------------------------------------------
+## Exposition : service NodePort (Ingress ajoute ulterieurement)
+## ----------------------------------------------------------------------------
+service:
+  type: NodePort
+  ports:
+    http: 80
+  nodePorts:
+    http: "30069"   # accessible sur http://<IP_NODE>:30069
+ingress:
+  enabled: false
+## ----------------------------------------------------------------------------
+## Persistance Odoo (filestore / addons) sur local-path
+## resourcePolicy "keep" -> le PVC n'est pas supprime lors d'un helm delete
+## (securise les donnees avant/apres sauvegarde Velero).
+## ----------------------------------------------------------------------------
+persistence:
+  enabled: true
+  storageClass: "local-path"
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  resourcePolicy: "keep"
+## Ajuste les permissions du volume au 1er montage (evite les erreurs d'ecriture)
+volumePermissions:
+  enabled: true
+## ----------------------------------------------------------------------------
+## Base de donnees PostgreSQL (sous-chart bitnami/postgresql)
+## Persistance sur local-path egalement -> sauvegardee avec Velero
+## ----------------------------------------------------------------------------
+postgresql:
+  enabled: true
+  auth:
+    username: bn_odoo
+    password: "RbmPgOdoo2026!"
+    database: bitnami_odoo
+    postgresPassword: "RbmPgAdmin2026!"
+  architecture: standalone
+  primary:
+    persistence:
+      enabled: true
+      storageClass: "local-path"
+      accessModes:
+        - ReadWriteOnce
+      size: 8Gi
+      ## conserve le PVC de la base lors d'un helm delete
+      resourcePolicy: "keep"
+    resourcesPreset: "none"
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+  ## Desactive aussi la NetworkPolicy du sous-chart PostgreSQL
+  ## pour eviter tout blocage de la communication Odoo -> BD
+  networkPolicy:
+    enabled: false
+
+## ----------------------------------------------------------------------------
+## (a reactiver et affiner lors de la mise en place de l'Ingress)
+## ----------------------------------------------------------------------------
+networkPolicy:
+  enabled: false
+## PodDisruptionBudget inutile avec une seule replica
+pdb:
+  create: false
